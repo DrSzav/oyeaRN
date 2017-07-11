@@ -1,277 +1,178 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- * @flow
- */
+'use strict';
 
- 'use strict';
+import {
+  AppRegistry,
+  AsyncStorage,
+  StyleSheet,
+  Text,
+  View,
+  TouchableHighlight,
+  AlertIOS } from 'react-native';
+import React from 'react'
+import ReactNativeLogin from './App/components/App';
+import t from 'tcomb-form-native';
+import Auth0Lock from 'react-native-lock'
+//import { AppRegistry } from 'react';
 
- import React, { Component } from 'react';
- import {
-     Image,
-     Text,
-     Navigator,
-     AppRegistry,
-     StyleSheet,
-     Dimensions,
-     View,
-     StatusBar,
-     PushNotificationIOS,
-     TouchableHighlight,
-     AlertIOS,
-     TextInput,
-     DeviceEventEmitter,
-     TouchableOpacity
- } from 'react-native';
+var STORAGE_KEY = 'id_token';
 
- import PushNotification from 'react-native-push-notification';
+var Form = t.form.Form;
 
- PushNotification.configure({
+var Person = t.struct({
+  username: t.String,
+  password: t.String
+});
 
-     // (optional) Called when Token is generated (iOS and Android)
-     onRegister: function(token) {
-         console.log( 'TOKEN:', token );
-     },
+const options = {};
 
-     // (required) Called when a remote or local notification is opened or received
-     onNotification: function(notification) {
-         console.log( 'NOTIFICATION:', notification );
-     },
+var AwesomeProject = React.createClass({
 
-     // ANDROID ONLY: GCM Sender ID (optional - not required for local notifications, but is need to receive remote push notifications)
-     senderID: "YOUR GCM SENDER ID",
+  async _onValueChange(item, selectedValue) {
+    try {
+      await AsyncStorage.setItem(item, selectedValue);
+    } catch (error) {
+      console.log('AsyncStorage error: ' + error.message);
+    }
+  },
 
-     // IOS ONLY (optional): default: all - Permissions to register.
-     permissions: {
-         alert: true,
-         badge: true,
-         sound: true
-     },
+  async _getProtectedQuote() {
+    var DEMO_TOKEN = await AsyncStorage.getItem(STORAGE_KEY);
+    fetch("http://localhost:3001/api/protected/random-quote", {
+      method: "GET",
+      headers: {
+        'Authorization': 'Bearer ' + DEMO_TOKEN
+      }
+    })
+    .then((response) => response.text())
+    .then((quote) => {
+      AlertIOS.alert(
+        "Chuck Norris Quote:", quote)
+    })
+    .done();
+  },
 
-     // Should the initial notification be popped automatically
-     // default: true
-     popInitialNotification: true,
+  async _userLogout() {
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEY);
+      AlertIOS.alert("Logout Success!")
+    } catch (error) {
+      console.log('AsyncStorage error: ' + error.message);
+    }
+  },
 
-     /**
-       * (optional) default: true
-       * - Specified if permissions (ios) and token (android and ios) will requested or not,
-       * - if not, you must call PushNotificationsHandler.requestPermissions() later
-       */
-     requestPermissions: true,
- });
+  _userSignup() {
+    var value = this.refs.form.getValue();
+    if (value) { // if validation fails, value will be null
+      fetch("http://localhost:3001/users", {
+        method: "POST",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: value.username,
+          password: value.password,
+        })
+      })
+      .then((response) => response.json())
+      .then((responseData) => {
+        this._onValueChange(STORAGE_KEY, responseData.id_token),
+        AlertIOS.alert(
+          "Signup Success!",
+          "Click the button to get a Chuck Norris quote!"
+        )
+      })
+      .done();
+    }
+  },
 
- class Button extends Component {
-   render() {
-     return (
-       <TouchableHighlight
-         underlayColor={'white'}
-         style={styles.button}
-         onPress={this.props.onPress}>
-         <Text style={styles.buttonLabel}>
-           {this.props.label}
-         </Text>
-       </TouchableHighlight>
-     );
-   }
- }
+  _userLogin() {
+    var value = this.refs.form.getValue();
+    if (value) { // if validation fails, value will be null
+      fetch("http://localhost:3001/sessions/create", {
+        method: "POST",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: value.username,
+          password: value.password,
+        })
+      })
+      .then((response) => response.json())
+      .then((responseData) => {
+        AlertIOS.alert(
+          "Login Success!",
+          "Click the button to get a Chuck Norris quote!"
+        ),
+        this._onValueChange(STORAGE_KEY, responseData.id_token)
+      })
+      .done();
+    }
+  },
 
- class oyea extends Component {
-
-   constructor (props) {
-     super(props)
-     this.state = {
-       visibleHeight: Dimensions.get('window').height,
-       text:"your message",
-     }
+  render() {
+    return (
+      <View style={styles.container}>
+        <View style={styles.row}>
+          <Text style={styles.title}>Signup/Login below for Chuck Norris Quotes!</Text>
+        </View>
+        <View style={styles.row}>
+          <Form
+            ref="form"
+            type={Person}
+            options={options}
+          />
+        </View>
+        <View style={styles.row}>
+          <TouchableHighlight style={styles.button} onPress={this._userSignup} underlayColor='#99d9f4'>
+            <Text style={styles.buttonText}>Signup</Text>
+          </TouchableHighlight>
+          <TouchableHighlight style={styles.button} onPress={this._userLogin} underlayColor='#99d9f4'>
+            <Text style={styles.buttonText}>Login</Text>
+          </TouchableHighlight>
+          <TouchableHighlight style={styles.button} onPress={this._userLogout} underlayColor='#99d9f4'>
+            <Text style={styles.buttonText}>Logout</Text>
+          </TouchableHighlight>
+        </View>
+        <View style={styles.row}>
+          <TouchableHighlight onPress={this._getProtectedQuote} style={styles.button}>
+            <Text style={styles.buttonText}>Get a Chuck Norris Quote!</Text>
+          </TouchableHighlight>
+        </View>
+      </View>
+    );
   }
+});
 
-   componentWillMount () {
-     this.setState({})
-     DeviceEventEmitter.addListener('keyboardWillShow', this.keyboardWillShow.bind(this))
-     DeviceEventEmitter.addListener('keyboardWillHide', this.keyboardWillHide.bind(this))
-   }
+var styles = StyleSheet.create({
+  container: {
+    justifyContent: 'center',
+    marginTop: 50,
+    padding: 20,
+    backgroundColor: '#ffffff',
+  },
+  title: {
+    fontSize: 30,
+    alignSelf: 'center',
+    marginBottom: 30
+  },
+  buttonText: {
+    fontSize: 18,
+    color: 'white',
+    alignSelf: 'center'
+  },
+  button: {
+    height: 36,
+    backgroundColor: '#48BBEC',
+    borderColor: '#48BBEC',
+    borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 10,
+    alignSelf: 'stretch',
+    justifyContent: 'center'
+  },
+});
 
-   keyboardWillShow (e) {
-     let newSize = e.endCoordinates.height
-     this.setState({visibleHeight: newSize,keyboard:true})
-   }
-
-   keyboardWillHide (e) {
-      //this.setState({keyboard:false,visibleHeight: Dimensions.get('window').height})
-   }
-
-   componentWillMount() {
-
-     // Add listener for push notifications
-     //PushNotificationIOS.addEventListener('notification', this._onNotification);
-     // Add listener for local notifications
-     //PushNotificationIOS.addEventListener('localNotification', this._onLocalNotification);
-
-    // PushNotificationIOS.requestPermissions();
-   }
-
-   componentWillUnmount() {
-     // Remove listener for push notifications
-//     PushNotificationIOS.removeEventListener('notification', this._onNotification);
-     // Remove listener for local notifications
-  //   PushNotificationIOS.removeEventListener('localNotification', this._onLocalNotification);
-   }
-
-   renderTextInput(){
-     if(this.state.keyboard){
-
-     return(<TextInput
-     style={[styles.TextInput,{
-      bottom:this.visibleHeight,
-      position:absolute,
-     }]}
-     onChangeText={(text) => this.setState({text})}
-     value={this.state.text}
-
-     />);
-   }
-   else{
-     return(<TextInput
-     style={[styles.TextInput,{}]}
-     onChangeText={(text) => this.setState({text})}
-     value={this.state.text}
-
-     />);
-   }
-   }
-
-   render() {
-     return (
-       <View style={{flex:1,backgroundColor:'black',}}>
-       <View style={[{flex:1,alignItems:'center',},styles.background]}>
-       <Text style={{alignSelf:'flex-start',color:'white',fontSize:30,fontWeight:'bold',margin:20}}>To:</Text>
-
-
-         <View style={[styles.textHolder,{alignItems:'flex-end',
-          width:Dimensions.get('window').width - 40,}]}>
-          {this.renderTextInput()}
-         </View>
-
-         <TouchableOpacity style={styles.sendButton}>
-         <Text style={{color:'#a63700',fontSize:30,fontWeight:'bold'}}>oyea?</Text>
-         </TouchableOpacity>
-         <Image style={{height:70,width:70,top:0,position:'absolute'}} source={require('./img/ologo.png')}/>
-
-
-
-
-       </View>
-       <StatusBar hidden={true}/>
-       </View>
-     );
-   }
-
-   _sendLocalNotification() {
-     PushNotification.localNotification({
-     /* Android Only Properties */
-     id: '0', // (optional) Valid unique 32 bit integer specified as string. default: Autogenerated Unique ID
-     ticker: "My Notification Ticker", // (optional)
-     autoCancel: true, // (optional) default: true
-     largeIcon: "ic_launcher", // (optional) default: "ic_launcher"
-     smallIcon: "ic_notification", // (optional) default: "ic_notification" with fallback for "ic_launcher"
-     bigText: "My big text that will be shown when notification is expanded", // (optional) default: "message" prop
-     subText: "This is a subText", // (optional) default: none
-     color: "red", // (optional) default: system default
-     vibrate: true, // (optional) default: true
-     vibration: 300, // vibration length in milliseconds, ignored if vibrate=false, default: 1000
-     tag: 'some_tag', // (optional) add tag to message
-     group: "group", // (optional) add group to message
-     ongoing: false, // (optional) set whether this is an "ongoing" notification
-
-     /* iOS only properties */
-    // alertAction:, // (optional) default: view
-    // category:, // (optional) default: null
-    // userInfo:, // (optional) default: null (object containing additional notification data)
-
-     /* iOS and Android properties */
-     title: "My Notification Title", // (optional, for iOS this is only used in apple watch, the title will be the app name on other iOS devices)
-     message: "My Notification Message", // (required)
-     playSound: false, // (optional) default: true
-     soundName: 'default', // (optional) Sound to play when the notification is shown. Value of 'default' plays the default sound. It can be set to a custom sound such as 'android.resource://com.xyz/raw/my_sound'. It will look for the 'my_sound' audio file in 'res/raw' directory and play it. default: 'default' (default sound is played)
-     number: '10', // (optional) Valid 32 bit integer specified as string. default: none (Cannot be zero)
- });
-   }
-
-
-   _onNotification(notification) {
-     AlertIOS.alert(
-       'Push Notification Received',
-       'Alert message: ' + notification.getMessage(),
-       [{
-         text: 'Dismiss',
-         onPress: null,
-       }]
-     );
-   }
-
-   _onLocalNotification(notification){
-     AlertIOS.alert(
-       'Local Notification Received',
-       'Alert message: ' + notification.getMessage(),
-       [{
-         text: 'Dismiss',
-         onPress: null,
-       }]
-     );
-   }
- }
-
- var styles = StyleSheet.create({
-   button: {
-     padding: 10,
-     alignItems: 'center',
-     justifyContent: 'center',
-   },
-   buttonLabel: {
-     color: 'blue',
-   },
-   textHolder:{
-    // position:'absolute',
-    // left:0,
-     backgroundColor:'white',
-
-    // bottom:Dimensions.get('window').height /2,
-     margin:20,
-     borderRadius:10,
-
-     shadowColor:'#a63700',
-     shadowOffset:{width:2,height:2},
-     shadowOpacity:.5,
-
-   },
-   TextInput:{
-     fontSize:20,
-    // margin:10,
-     borderRadius:10,
-     textAlign:'center',
-     height: 40,
-     borderColor: '#a63700',
-     borderWidth: 3,
-     color:'#a63700',
-
-   },
-   background: {
-     backgroundColor:'#ff7733',
-     borderRadius:20,
-     justifyContent: 'center',
-   },
-   sendButton:{
-     borderRadius:20,
-     borderStyle:'solid',
-     borderColor:'white',
-     backgroundColor:'#ffc3a5',
-     borderWidth:5,
-     padding:20,
-     shadowColor:'#a63700',
-     shadowOffset:{width:5,height:5},
-     shadowOpacity:100,
-
-   }
- });
-
-AppRegistry.registerComponent('oyea', () => oyea);
+AppRegistry.registerComponent('oyea', () => ReactNativeLogin);

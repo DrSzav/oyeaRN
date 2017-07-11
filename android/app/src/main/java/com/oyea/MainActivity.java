@@ -1,6 +1,8 @@
 package com.oyea;
 
 import com.facebook.react.ReactActivity;
+import com.auth0.lock.react.LockReactPackage;
+import com.psykar.cookiemanager.CookieManagerPackage;
 import com.dieam.reactnativepushnotification.ReactNativePushNotificationPackage;
 
 public class MainActivity extends ReactActivity {
