@@ -4,7 +4,7 @@ import { Text,
   View,
   StyleSheet,
   Animated,
-  Easing } from 'react-native';
+  Easing, TouchableOpacity } from 'react-native';
 import Colors from '../constants/Colors';
 import Layout from '../constants/Layout';
 
@@ -52,6 +52,8 @@ export class ChompMenu extends React.Component {
     ).start();
   }
 
+
+
   render() {
     return (
       <View style={styles.container}>
@@ -77,14 +79,20 @@ export class ChompMenu extends React.Component {
            inputRange: [0, 1],
            outputRange: [230, 260],
           })
-          
-          
            }]}>
 
+            <TouchableOpacity onPress={this.props.addFriends}>
             <View style={styles.menuItem}><Image source={require('../assets/images/friends.png')} /><Text style={styles.menuItemText}>Friends</Text></View>
+           </TouchableOpacity>
+
             <View style={styles.menuItem}><Image source={require('../assets/images/channels.png')} /><Text style={styles.menuItemText}>Channels</Text></View>
             <View style={styles.menuItem}><Image source={require('../assets/images/mute.png')} /><Text style={styles.menuItemText}>Mute</Text></View>
-            <View style={styles.menuItem}><Image source={require('../assets/images/signout.png')} /><Text style={styles.menuItemText}>Sign Out</Text></View>
+            
+            <TouchableOpacity onPress={this.props.signOut}><View style={styles.menuItem}>
+              <Image source={require('../assets/images/signout.png')} /><Text style={styles.menuItemText}>Sign Out</Text>
+             
+            </View>
+             </TouchableOpacity>
 
           <Animated.View style={[styles.bottomTooth,{left:23} ]}/>
           <Animated.View style={[styles.bottomTooth,{left:65}]}/>
@@ -118,7 +126,7 @@ const styles = StyleSheet.create({
     flexDirection:'row',
     justifyContent:'center',
     alignItems:'center',
-    zIndex:999999
+    zIndex:60
   },
   mouthTop: {
     backgroundColor:'white',

@@ -1,5 +1,6 @@
 import React from 'react';
-import Expo, { Asset, Audio, Font, Permissions } from 'expo';
+import Permissions from 'react-native-permissions';
+//import Expo, { Asset, Audio, Font, Permissions } from 'expo';
 
 export class OyeaAudio{
   constructor() {
@@ -13,11 +14,13 @@ export class OyeaAudio{
     
   }
 
-  _askForPermissions = async () => {
-    const response = await Permissions.askAsync(Permissions.AUDIO_RECORDING);
-  //  this.setState({
-  //    haveRecordingPermissions: response.status === 'granted',
-  //  });
+  _askForPermissions () {
+    Permissions.request('microphone')
+    .then(response => {
+      //returns once the user has chosen to 'allow' or to 'not allow' access
+      //response is one of: 'authorized', 'denied', 'restricted', or 'undetermined'
+     // this.setState({ micPermission: response })
+    });
   };
 
   async _stopPlaybackAndBeginRecording() {

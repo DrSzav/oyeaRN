@@ -126,6 +126,9 @@ android {
 }
 
 dependencies {
+    compile project(':react-native-sound')
+    compile project(':react-native-audio-player-recorder')
+    compile project(':react-native-aws-cognito-js')
     compile project(':react-native-lock')
     compile project(':react-native-cookies')
     compile project(':react-native-push-notification')

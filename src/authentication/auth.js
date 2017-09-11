@@ -6,11 +6,11 @@ import {
     CognitoUser,
     CognitoUserAttribute,
     CognitoUserPool
-} from "../../lib/aws-cognito-identity/index";
+} from "react-native-aws-cognito-js";
 
 const AWS_COGNITO = {
-    UserPoolId: 'us-west-2_Ii6UVoaUZ', //Enter your User Pool Id here
-    ClientId: '1pll5vpoii5itck34cp52ql6kj' //Enter your Client Id here
+    UserPoolId: 'us-west-2_L2QKxQ5NN', //Enter your User Pool Id here
+    ClientId: '60ajd5s0s555k3jli8bvf2mb9c' //Enter your Client Id here
 };
 
 export const onSignIn = (userName, password, callback) => {
@@ -29,6 +29,9 @@ export const onSignIn = (userName, password, callback) => {
         onSuccess: (result) => {
             console.log('authenticateUser timey', new Date().getTime() - start)
             const jwt = parseJwt(result.getAccessToken().getJwtToken());
+            
+            console.log(result.getAccessToken().getJwtToken());
+            
             utils.setEmailUserID(userName, jwt.sub, () => {
                 callback(null)
             });
@@ -39,10 +42,10 @@ export const onSignIn = (userName, password, callback) => {
     });
 };
 
-export const onRegister = (userName, password, callback) => {
+export const onRegister = (email, password, userName,callback) => {
     const userPool = new CognitoUserPool(AWS_COGNITO);
     const attributeList = [
-        new CognitoUserAttribute({ Name: 'email', Value: userName })
+        new CognitoUserAttribute({ Name: 'email', Value: email })
     ];
     userPool.signUp(
         userName,
@@ -117,6 +120,25 @@ export const onChangePassword = (userName, code, password, callback) => {
     });
 }
 
+export const resendConfirmation = (userName, callback) => {
+    const userPool = new CognitoUserPool(AWS_COGNITO);
+    const cognitoUser = new CognitoUser({
+        Username: userName,
+        Pool: userPool
+    });
+    console.log(userName);
+    cognitoUser.resendConfirmationCode(userName, callback, {
+        onSuccess: function () {
+           // console.log('resendConfirmation');
+            callback(null);
+        },
+        onFailure: function(err) {
+            //console.log('resendConfirmation');
+            callback(err);
+        }
+    });
+}
+
 function parseJwt(token) {
     const payload = token.split('.')[1];
     return JSON.parse(util.base64.decode(payload).toString('utf8'));
@@ -126,4 +148,24 @@ export const isSignedIn = (callback) => {
     AsyncStorage.getItem('USER_ID', (err, result) => {
         callback(err, result);
     });
+};
+
+export const getSession = (callback) => {
+    const userPool = new CognitoUserPool(AWS_COGNITO);
+    const cognitoUser = new CognitoUser({
+            Pool:userPool,
+            Username:'drszav'
+        });
+    
+    const sess = cognitoUser.getSession(callback, {
+        onSuccess: function () {
+           // console.log('resendConfirmation');
+            callback(null);
+        },
+        onFailure: function(err) {
+            //console.log('resendConfirmation');
+            callback(err);
+        }
+    });
+    
 };

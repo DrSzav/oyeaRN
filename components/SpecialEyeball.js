@@ -43,26 +43,30 @@ export class SpecialEyeball extends React.Component {
 
   render() {
     return (
+   
       <View {...this.props} style={styles.centerEye}>
-      <TouchableOpacity onPress={this.eyePress.bind(this)}><View
-        style={styles.eyeContainer}
-      >
-        <Animated.View style={[styles.pupil,{
-        transform:[
-          {translateX:
-          this.state.eyeX.interpolate({
-            inputRange: [0, 20,80, 100],
-            outputRange: [0, -10, 10,0]
-          })},
-          {scaleY:  this.state.eyeX.interpolate({
-            inputRange: [0, 20,50,80,100],
-            outputRange: [3, 2.7, 3,2.7, 3]
-            })}
-          ]
-        }]}>
-        </Animated.View>
-      </View></TouchableOpacity>
-      </View>
+        <View
+          style={styles.eyeContainer}
+        >
+        
+          <Animated.View style={[styles.pupil,{
+          transform:[
+            {translateX:
+            this.state.eyeX.interpolate({
+              inputRange: [0, 20,80, 100],
+              outputRange: [0, -10, 10,0]
+            })},
+            {scaleY:  this.state.eyeX.interpolate({
+              inputRange: [0, 20,50,80,100],
+              outputRange: [3, 2.7, 3,2.7, 3]
+              })}
+            ]
+          }]}>
+          </Animated.View>
+        
+          </View>
+        </View>
+   
     );
   }
 }
@@ -75,7 +79,7 @@ const styles = StyleSheet.create({
     justifyContent:'center',
     alignItems:'center',
     backgroundColor:Colors.primaryColor,
-    zIndex:20
+    zIndex:200
   },
   eyeContainer: {
     width:70,
@@ -87,7 +91,7 @@ const styles = StyleSheet.create({
     ],
     alignItems:'center',
     justifyContent:'center',
-    zIndex:20
+    zIndex:200
   },
     pupil: {
     width:23,

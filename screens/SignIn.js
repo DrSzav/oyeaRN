@@ -1,13 +1,17 @@
 // RNPasswordExample/app/SignIn.js
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 import { StyleSheet, Text, View,
-      TouchableOpacity, Dimensions, TextInput, ScrollView } from 'react-native';
+      TouchableOpacity, Dimensions, TextInput, ScrollView,Keyboard } from 'react-native';
 import React ,{ Component } from 'react';
 import { SpecialEyeball } from '../components/SpecialEyeball';
 import Colors from '../constants/Colors';
-
+import {onSignIn, onRegister, onVerify,resendConfirmation} from '../src/authentication/auth';
 import Toast from 'react-native-root-toast';
 const { width } = Dimensions.get('window');
+const toastStyle = {
+  backgroundColor:Colors.primaryColor,
+  textColor:Colors.secondaryColor}
+
 
 export class SignIn extends React.Component {
   constructor(props) {
@@ -20,13 +24,17 @@ export class SignIn extends React.Component {
       username: '',
       error: null, // added this
       createAccount:false,
-      signIn:true
+      signIn:true,
+      verificationCode:'',
+      verify:false
     };
   }
+
 
   Nevermind(){
     this.setState({forgottenPassword:false});
     this.setState({createAccount:false});
+    this.setState({verify:false});
   }
 
   renderInputs(){
@@ -42,12 +50,14 @@ export class SignIn extends React.Component {
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="email-address"
+            multiline={false}
+            onSubmitEditing={Keyboard.dismiss}
+            returnKeyType='done'
           /></View>
 
       </View>
       )
     }
-
 
 
     if(this.state.createAccount){
@@ -62,6 +72,9 @@ export class SignIn extends React.Component {
         autoCapitalize="none"
         autoCorrect={false}
         keyboardType="email-address"
+        multiline={false}
+        onSubmitEditing={Keyboard.dismiss}
+        returnKeyType='done'
       /></View>
 
       <View style={styles.inputView}><TextInput
@@ -72,6 +85,9 @@ export class SignIn extends React.Component {
         autoCapitalize="none"
         autoCorrect={false}
         secureTextEntry={true}
+        multiline={false}
+        onSubmitEditing={Keyboard.dismiss}
+        returnKeyType='done'
       />
 
       <View style={styles.inputView}><TextInput
@@ -82,6 +98,9 @@ export class SignIn extends React.Component {
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="email-address"
+          multiline={false}
+          onSubmitEditing={Keyboard.dismiss}
+          returnKeyType='done'
         /></View>
 
       </View>
@@ -89,6 +108,40 @@ export class SignIn extends React.Component {
 
       </View>
     );
+  }
+
+   if(this.state.verify){
+    return(
+      <View style={{height:120,alignItems:'center',marginTop:40}}>
+        <View style={styles.inputView}><TextInput
+            key={'verify'}
+            style={styles.input}
+            onChangeText={(username) => this.setState({username})}
+            placeholder="username"
+             placeholderTextColor={Colors.secondaryColor}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            multiline={false}
+            onSubmitEditing={Keyboard.dismiss}
+            returnKeyType='done'
+          /></View>
+          <View style={styles.inputView}><TextInput
+            style={styles.input}
+            onChangeText={(verificationCode) => this.setState({verificationCode})}
+            placeholder="Code..."
+            placeholderTextColor={Colors.secondaryColor}
+            autoCapitalize="none"
+            autoCorrect={false}
+            secureTextEntry={true}
+            multiline={false}
+            onSubmitEditing={Keyboard.dismiss}
+            returnKeyType='done'
+            keyboardType="numeric"
+          /></View>
+          </View>
+    )
+
   }
 
   if(this.state.signIn){
@@ -102,6 +155,9 @@ export class SignIn extends React.Component {
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="email-address"
+            multiline={false}
+            onSubmitEditing={Keyboard.dismiss}
+            returnKeyType='done'
           /></View>
           <View style={styles.inputView}><TextInput
             style={styles.input}
@@ -111,11 +167,16 @@ export class SignIn extends React.Component {
             autoCapitalize="none"
             autoCorrect={false}
             secureTextEntry={true}
+            multiline={false}
+            onSubmitEditing={Keyboard.dismiss}
+            returnKeyType='done'
           /></View>
           </View>
     )
 
   }
+
+  
 
 
 
@@ -133,6 +194,8 @@ export class SignIn extends React.Component {
         autoCapitalize="none"
         autoCorrect={false}
         keyboardType="email-address"
+        onSubmitEditing={Keyboard.dismiss}
+        returnKeyType='done'
       /></View>
     )
   }
@@ -159,7 +222,7 @@ export class SignIn extends React.Component {
     
       <View style={{flex:3}}>
       <TouchableOpacity style={styles.button} onPress={this.resetPassword.bind(this)}>
-        <Text style={styles.buttonText}>email me!</Text>
+        <Text style={styles.buttonText}>Email Me</Text>
       </TouchableOpacity>
 
 
@@ -170,30 +233,38 @@ export class SignIn extends React.Component {
     )}
     if(this.state.createAccount){
       return(
-      <View style={{height:270,flexDirection:'row',alignItems:'center',justifyContent:'center'}}>
-    
+      <View style={{height:270,flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+    <View style={{flex:3}}>
+      <TouchableOpacity style={styles.button} onPress={this.onCreateAccount.bind(this)}>
+        <Text style={styles.buttonText}>Create Account</Text>
+      </TouchableOpacity>
+      </View>
       <View style={{flex:3}}>
-
-
       <TouchableOpacity style={styles.button} onPress={this.Nevermind.bind(this)}>
           <Text style={styles.buttonText}>Never Mind</Text>
         </TouchableOpacity>
       </View>
-
-
-
-      
-
-      <View style={{flex:3}}>
-
-      <TouchableOpacity style={styles.button} onPress={this.onCreateAccount.bind(this)}>
-        <Text style={styles.buttonText}>Create Account</Text>
-      </TouchableOpacity>
-
-
-
       </View>
-      
+    )
+    }
+   if(this.state.verify){
+      return(
+      <View style={{height:330,flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+    <View style={{flex:3}}>
+      <TouchableOpacity style={styles.button} onPress={this.verifyCode.bind(this)}>
+        <Text style={styles.buttonText}>Verify</Text>
+      </TouchableOpacity>
+      </View>
+         <View style={{flex:3}}>
+      <TouchableOpacity style={styles.button} onPress={this.Nevermind.bind(this)}>
+        <Text style={styles.buttonText}>Never Mind</Text>
+      </TouchableOpacity>
+      </View>
+      <View style={{flex:3}}>
+      <TouchableOpacity style={styles.button} onPress={this.resendCode.bind(this)}>
+        <Text style={styles.buttonText}>Resend Code</Text>
+      </TouchableOpacity>
+      </View>
       </View>
     )
     }
@@ -201,7 +272,7 @@ export class SignIn extends React.Component {
     <View style={{height:270,flexDirection:'column',alignItems:'center',justifyContent:'space-between'}}>
     
       <View style={{flex:3}}>
-      <TouchableOpacity style={styles.button} onPress={this.onSignIn.bind(this)}>
+      <TouchableOpacity style={styles.button} onPress={this.SignIn.bind(this)}>
           <Text style={styles.buttonText}>Sign In</Text>
       </TouchableOpacity>
     </View>
@@ -227,20 +298,33 @@ export class SignIn extends React.Component {
     }
 
     if (email.length === 0) {
-      Toast.show('You must enter an email address');
+      Toast.show('You must enter an email address',toastStyle);
     } else if (password.length === 0) {
-      Toast.show('You must enter a password');
+      Toast.show('You must enter a password',toastStyle);
     }
 
     return valid;
   }
 
-  onSignIn() {
-     const { email, password } = this.state;
+  resendCode(){
+    resendConfirmation(this.state.username,this.resendCallback());
+  }
 
-     if (this.isValid()) {
-       Meteor.loginWithPassword(email, password,this.signInCallback.bind(this));
-     }
+  resendCallback(){
+
+  }
+
+  SignIn() {
+     const { email, password } = this.state;
+    onSignIn(this.state.email, this.state.password, (err) => {
+          if(err) {
+              this.setState({loading:false, 'error': err.message}, () => {
+               Toast.show(err.message);  
+              });
+          } else {
+              this.props.signedIn(true);
+          }
+      });
    }
 
    signInCallback(error){
@@ -278,22 +362,35 @@ export class SignIn extends React.Component {
     const { email, password,username } = this.state;
 
      if (this.isValid()) {
-       Accounts.createUser({ email, password,username },this.createUserCallback.bind(this));
+       onRegister( email, password,username ,this.createUserCallback.bind(this));
      }
    }
 
    createUserCallback(error){
       //Toast.show('callback hit');
       if(error){
-        if(error.reason){
-        Toast.show(error.reason);
-        }
+          Toast.show(error.message); 
       }
       else{
-        const { email, password } = this.state;
-         Meteor.loginWithPassword(email, password)
+        this.switchToVerify();
       }
    }
+
+  switchToVerify(){
+    this.setState({verify:true});
+  }
+
+  verifyCode(){
+    onVerify(this.state.username, this.state.verificationCode, (err) => {
+          if (err) {
+              this.setState({loading:false, 'error': err.message}, () => {
+                  this.render();
+              });
+          } else {
+             
+          }
+      });
+  }
 
   render() {
 
@@ -301,6 +398,11 @@ export class SignIn extends React.Component {
   let forgotPassword = this.state.forgottenPassword ? null : 
       <TouchableOpacity style={styles.forgottenPasswordButton} onPress={this.forgottenPassword.bind(this)}>
         <Text style={styles.forgottenPasswordText}>I forgot my password...</Text>
+      </TouchableOpacity>
+      ;
+  let verify = (this.state.forgottenPassword || this.state.createAccount)? null : 
+      <TouchableOpacity style={styles.verifyEmailButton} onPress={this.switchToVerify.bind(this)}>
+        <Text style={styles.forgottenPasswordText}>Verify Email</Text>
       </TouchableOpacity>
       ;
   return (
@@ -320,6 +422,7 @@ export class SignIn extends React.Component {
     </View>
   
       {forgotPassword}
+      {verify}
     
   </KeyboardAwareScrollView>
   )
@@ -381,6 +484,15 @@ headingStyle:{
   },
    
   forgottenPasswordButton:{
+      position:'relative',
+      marginTop:10,
+      alignSelf:'center',
+      zIndex:999999,
+     // backgroundColor: 'black',
+      padding: 10,
+      margin:10
+  },
+      verifyEmailButton:{
       position:'relative',
       marginTop:10,
       alignSelf:'center',

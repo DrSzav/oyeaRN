@@ -1,178 +1,70 @@
-'use strict';
+import React from 'react';
+import { Platform, StatusBar, StyleSheet, View,
+  AppRegistry } from 'react-native';
+//import { AppLoading, Asset, Font } from 'expo';
+//import { Ionicons } from '@expo/vector-icons';
+//import RootNavigation from './navigation/RootNavigation';
+import HomeScreen from './screens/HomeScreen';
 
-import {
-  AppRegistry,
-  AsyncStorage,
-  StyleSheet,
-  Text,
-  View,
-  TouchableHighlight,
-  AlertIOS } from 'react-native';
-import React from 'react'
-import ReactNativeLogin from './App/components/App';
-import t from 'tcomb-form-native';
-import Auth0Lock from 'react-native-lock'
-//import { AppRegistry } from 'react';
+export default class App extends React.Component {
+  state = {
+    assetsAreLoaded: false,
+  };
 
-var STORAGE_KEY = 'id_token';
-
-var Form = t.form.Form;
-
-var Person = t.struct({
-  username: t.String,
-  password: t.String
-});
-
-const options = {};
-
-var AwesomeProject = React.createClass({
-
-  async _onValueChange(item, selectedValue) {
-    try {
-      await AsyncStorage.setItem(item, selectedValue);
-    } catch (error) {
-      console.log('AsyncStorage error: ' + error.message);
-    }
-  },
-
-  async _getProtectedQuote() {
-    var DEMO_TOKEN = await AsyncStorage.getItem(STORAGE_KEY);
-    fetch("http://localhost:3001/api/protected/random-quote", {
-      method: "GET",
-      headers: {
-        'Authorization': 'Bearer ' + DEMO_TOKEN
-      }
-    })
-    .then((response) => response.text())
-    .then((quote) => {
-      AlertIOS.alert(
-        "Chuck Norris Quote:", quote)
-    })
-    .done();
-  },
-
-  async _userLogout() {
-    try {
-      await AsyncStorage.removeItem(STORAGE_KEY);
-      AlertIOS.alert("Logout Success!")
-    } catch (error) {
-      console.log('AsyncStorage error: ' + error.message);
-    }
-  },
-
-  _userSignup() {
-    var value = this.refs.form.getValue();
-    if (value) { // if validation fails, value will be null
-      fetch("http://localhost:3001/users", {
-        method: "POST",
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          username: value.username,
-          password: value.password,
-        })
-      })
-      .then((response) => response.json())
-      .then((responseData) => {
-        this._onValueChange(STORAGE_KEY, responseData.id_token),
-        AlertIOS.alert(
-          "Signup Success!",
-          "Click the button to get a Chuck Norris quote!"
-        )
-      })
-      .done();
-    }
-  },
-
-  _userLogin() {
-    var value = this.refs.form.getValue();
-    if (value) { // if validation fails, value will be null
-      fetch("http://localhost:3001/sessions/create", {
-        method: "POST",
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          username: value.username,
-          password: value.password,
-        })
-      })
-      .then((response) => response.json())
-      .then((responseData) => {
-        AlertIOS.alert(
-          "Login Success!",
-          "Click the button to get a Chuck Norris quote!"
-        ),
-        this._onValueChange(STORAGE_KEY, responseData.id_token)
-      })
-      .done();
-    }
-  },
+  componentWillMount() {
+    this._loadAssetsAsync();
+  }
 
   render() {
-    return (
-      <View style={styles.container}>
-        <View style={styles.row}>
-          <Text style={styles.title}>Signup/Login below for Chuck Norris Quotes!</Text>
+    if (!this.state.assetsAreLoaded && !this.props.skipLoadingScreen) {
+      return <AppLoading />;
+    } else {
+      return (
+        <View style={styles.container}>
+          <HomeScreen/>
         </View>
-        <View style={styles.row}>
-          <Form
-            ref="form"
-            type={Person}
-            options={options}
-          />
-        </View>
-        <View style={styles.row}>
-          <TouchableHighlight style={styles.button} onPress={this._userSignup} underlayColor='#99d9f4'>
-            <Text style={styles.buttonText}>Signup</Text>
-          </TouchableHighlight>
-          <TouchableHighlight style={styles.button} onPress={this._userLogin} underlayColor='#99d9f4'>
-            <Text style={styles.buttonText}>Login</Text>
-          </TouchableHighlight>
-          <TouchableHighlight style={styles.button} onPress={this._userLogout} underlayColor='#99d9f4'>
-            <Text style={styles.buttonText}>Logout</Text>
-          </TouchableHighlight>
-        </View>
-        <View style={styles.row}>
-          <TouchableHighlight onPress={this._getProtectedQuote} style={styles.button}>
-            <Text style={styles.buttonText}>Get a Chuck Norris Quote!</Text>
-          </TouchableHighlight>
-        </View>
-      </View>
-    );
+      );
+    }
   }
-});
 
-var styles = StyleSheet.create({
+  async _loadAssetsAsync() {
+    try {
+      await Promise.all([
+        Asset.loadAsync([
+          require('./assets/images/robot-dev.png'),
+          require('./assets/images/robot-prod.png'),
+        ]),
+        Font.loadAsync([
+          // This is the font that we are using for our tab bar
+          Ionicons.font,
+          // We include SpaceMono because we use it in HomeScreen.js. Feel free
+          // to remove this if you are not using it in your app
+          //{ 'space-mono': require('./assets/fonts/SpaceMono-Regular.ttf') },
+        ]),
+      ]);
+    } catch (e) {
+      // In this case, you might want to report the error to your error
+      // reporting service, for example Sentry
+      console.warn(
+        'There was an error caching assets (see: App.js), perhaps due to a ' +
+          'network timeout, so we skipped caching. Reload the app to try again.'
+      );
+      console.log(e);
+    } finally {
+      this.setState({ assetsAreLoaded: true });
+    }
+  }
+}
+
+const styles = StyleSheet.create({
   container: {
-    justifyContent: 'center',
-    marginTop: 50,
-    padding: 20,
-    backgroundColor: '#ffffff',
+    flex: 1,
+    backgroundColor: '#FF6200',
   },
-  title: {
-    fontSize: 30,
-    alignSelf: 'center',
-    marginBottom: 30
-  },
-  buttonText: {
-    fontSize: 18,
-    color: 'white',
-    alignSelf: 'center'
-  },
-  button: {
-    height: 36,
-    backgroundColor: '#48BBEC',
-    borderColor: '#48BBEC',
-    borderWidth: 1,
-    borderRadius: 8,
-    marginBottom: 10,
-    alignSelf: 'stretch',
-    justifyContent: 'center'
+  statusBarUnderlay: {
+    height: 24,
+    backgroundColor: 'rgba(0,0,0,0.2)',
   },
 });
 
-AppRegistry.registerComponent('oyea', () => ReactNativeLogin);
+AppRegistry.registerComponent('oyea',() => App)
